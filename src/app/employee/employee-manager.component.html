@@ -1,0 +1,110 @@
+<div class="min-h-screen flex bg-gray-100">
+  <!-- Sidebar -->
+  <aside class="w-56 bg-gradient-to-b from-[#0b3b66] via-[#0b3b66] to-[#0b3b66] text-white p-6 flex flex-col gap-4">
+    <div class="font-semibold text-lg">
+      <img src="/Biometria.ico" alt="icone biometria-i9nove" class="inline w-20 h-20 mr-2 align-middle" />
+    </div>
+    <nav class="flex flex-col gap-2 mt-4">
+      <button class="text-left px-3 py-2 rounded hover:bg-white/10">Dashboard</button>
+      <button class="text-left px-3 py-2 rounded bg-white/6">Biometria</button>
+      <button class="text-left px-3 py-2 rounded hover:bg-white/10">Logs</button>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1">
+    <nav>
+      <!-- Topbar -->
+      <header class="top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-center p-8">
+        <div class="text-xl font-bold text-[#0b3b66]">i9 - Gestão de Biometria</div>
+      </header>
+    </nav>
+    <div class="max-w-8xl mx-auto max-h-full p-8">
+      <section class="bg-white rounded-xl shadow p-6">
+        <header class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold text-[#0b3b66]">Gestão de Biometria</h2>
+          <div class="flex items-center gap-3">
+            <input id="search" #searchInput type="text" placeholder="Buscar por ID ou Matrícula" class="px-4 py-2 rounded-lg border border-gray-200 w-80" />
+            <button class="px-4 py-2 bg-[#0b3b66] text-white rounded-lg cursor-pointer hover:bg-gray-800 transition-colors" (click)="search(searchInput.value)">Buscar</button>
+          </div>
+        </header>
+
+        <div class="grid grid-cols-12 gap-6">
+          <!-- Left column -->
+          <div class="col-span-4">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-28 h-36 bg-gray-50 rounded-lg flex items-center justify-center text-gray-400 overflow-hidden">
+                <img *ngIf="employee()?.photoUrl; else placeholder" [src]="employee()?.photoUrl" alt="Foto do funcionário" class="w-full h-full object-cover rounded-lg" />
+                <ng-template #placeholder>
+                  <span class="text-4xl">👤</span>
+                </ng-template>
+              </div>
+              <div>
+                <div class="text-lg font-semibold text-[#0b3b66]">{{ fullName() || '—' }}</div>
+                <div class="text-sm text-gray-500">Matrícula: <span class="text-gray-700">{{ employee()?.badge || '-' }}</span></div>
+                <div class="text-sm text-gray-500">Cargo: <span class="text-gray-700">{{ employee()?.position || '-' }}</span></div>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+              <button class="px-4 py-2 rounded-lg border bg-white text-gray-700 cursor-pointer hover:bg-gray-300 transition-colors" (click)="clearInputs()">Cancelar</button>
+              <button class="px-4 py-2 rounded-lg bg-[#6b21a8] text-white cursor-pointer hover:bg-[#5b1890] transition-colors" (click)="openCameraModal()">Capturar Foto/Biometria</button>
+              <button class="px-4 py-2 rounded-lg bg-gray-500 text-white cursor-pointer hover:bg-gray-700 transition-colors" (click)="fileInput.click()">Enviar do computador</button>
+            </div>
+          </div>
+          <input id="file-upload" #fileInput type="file" accept="image/*" (change)="onFileChange($event)" class="hidden" />
+
+          <!-- Right column -->
+          <div class="col-span-8">
+            <div class="min-h-[220px] flex items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white">
+              <div class="text-gray-500">Clique em "Capturar Foto/Biometria" para abrir o modal de captura da câmera.</div>
+            </div>
+
+            <div class="mt-4">
+              <div *ngIf="draftBlob(); else noPreview">
+                <h3 class="text-sm font-medium text-gray-700">Pré-visualização</h3>
+                <img [src]="previewUrl()" alt="Pré-visualização da captura" class="mt-2 w-48 rounded shadow object-cover h-60" />
+                <div class="mt-3 flex gap-2">
+                  <button class="px-3 py-2 bg-green-600 text-white rounded" [attr.aria-disabled]="!canSave()" (click)="saveBiometry()">Salvar Biometria</button>
+                  <button class="px-3 py-2 border rounded" (click)="clearDraft()">Tentar Novamente</button>
+                </div>
+              </div>
+
+              <ng-template #noPreview>
+              </ng-template>
+
+              <div *ngIf="statusMessage()" role="status" aria-live="polite" class="mt-3 text-green-600">{{ statusMessage() }}</div>
+              <div *ngIf="errorState()" role="alert" class="mt-3 text-red-500">{{ errorState()?.message }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Camera modal (visibility controlled by modalOpen) -->
+    <div *ngIf="modalOpen()" class="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
+      <div class="bg-white rounded-xl shadow-lg w-[420px] max-w-full mx-4">
+        <header class="flex items-center justify-between p-4 border-b">
+          <h3 class="text-lg font-medium">Capturar Face</h3>
+          <button class="text-gray-600" (click)="closeCameraModal()" aria-label="Fechar modal">✕</button>
+        </header>
+
+        <div class="p-4">
+          <div class="relative w-full">
+            <video id="modalVideoEl" #modalVideo class="w-full rounded-md bg-gray-100" autoplay muted playsinline></video>
+            <!-- Vertical oval overlay for portrait framing -->
+            <div class="absolute left-1/2 top-1/2 w-2/5 h-4/5 -translate-x-1/2 -translate-y-1/2 rounded-[50%/60%] pointer-events-none border-2 border-white/80"></div>
+          </div>
+        </div>
+
+        <footer class="flex items-center justify-between gap-3 p-4 border-t">
+          <div class="text-sm text-gray-600">Posicione o rosto dentro da máscara e clique em Capturar</div>
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-2 rounded border" (click)="closeCameraModal()">Cancelar</button>
+            <button class="px-4 py-2 rounded bg-orange-500 text-white" (click)="onModalCapture()">Capturar</button>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </main>
+</div>

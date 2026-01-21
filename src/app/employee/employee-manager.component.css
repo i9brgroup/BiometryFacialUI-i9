@@ -1,0 +1,9 @@
+/* Component styles minimized — Tailwind utility classes used in the template handle layout and visuals */
+:host { display: block; }
+
+/* Minimal focus styles to preserve accessibility (Tailwind provides many utilities, but keep this fallback) */
+:focus { outline: none; }
+button:focus, input:focus, [role="button"]:focus {
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.18);
+  border-radius: 0.5rem;
+}
