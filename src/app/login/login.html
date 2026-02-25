@@ -1,1 +1,51 @@
-<p>login works!</p>
+<div class="min-h-screen flex bg-gray-100 font-sans">
+  <!-- Sidebar (match EmployeeManager visual) -->
+  <aside class="w-56 bg-gradient-to-b from-[#0b3b66] via-[#ED2100] to-[#FF2C2C] text-white p-6 flex flex-col gap-6">
+    <div class="flex items-center gap-3 flex-col">
+      <img src="/Biometria.ico" alt="Biometria i9" class="w-32 h-32"/>
+      <div class="font-semibold text-xl text-center">i9 - Biometria</div>
+    </div>
+    <nav class="flex flex-col gap-2 mt-4">
+      <button class="text-left px-3 py-2 rounded hover:bg-white/10">Entrar</button>
+      <button class="text-left px-3 py-2 rounded hover:bg-white/10">Ajuda</button>
+    </nav>
+  </aside>
+
+  <!-- Main area -->
+  <main class="flex-1 flex items-center justify-center p-8">
+    <div class="w-full max-w-md bg-white rounded-xl shadow p-6">
+      <header class="flex items-center gap-3 mb-6">
+        <img src="/Biometria.ico" alt="logo" class="w-12 h-12"/>
+        <div>
+          <h1 class="text-2xl font-semibold text-navy">Acessar Sistema</h1>
+          <p class="text-sm text-gray-500">Informe suas credenciais para entrar</p>
+        </div>
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4" aria-label="Formulário de login">
+        <mat-form-field class="w-full">
+          <mat-label>Email</mat-label>
+          <input class="p-4" type="email" matInput [formControl]="emailFormControl" [errorStateMatcher]="matcher" placeholder="Ex. pat@example.com" aria-required="true" autocomplete="username">
+          <mat-error *ngIf="emailFormControl.hasError('email') && !emailFormControl.hasError('required')">Digite um endereço de Email válido!</mat-error>
+          <mat-error *ngIf="emailFormControl.hasError('required')">Email é <strong>obrigatório</strong></mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-full">
+          <mat-label>Senha</mat-label>
+          <input matInput type="password" formControlName="password" aria-required="true" autocomplete="current-password" />
+          <mat-error *ngIf="form.get('password')?.hasError('required') && form.get('password')?.touched">Senha é <strong>obrigatória</strong></mat-error>
+        </mat-form-field>
+
+        <div *ngIf="error()" class="text-sm text-red-500" role="alert">{{ error() }}</div>
+
+        <div class="pt-2 flex items-center justify-between">
+          <button mat-flat-button color="primary" class="px-6 py-2 rounded" type="submit" [disabled]="loading()">
+            <span *ngIf="loading()" class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" aria-hidden="true"></span>
+            Entrar
+          </button>
+          <a class="text-sm text-gray-500 hover:underline" href="#">Esqueci a senha</a>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>

@@ -10,12 +10,24 @@ export interface Employee {
   firstName: string;
   lastName: string;
   badge?: string;
-  position?: string;
+  siteID?: string;
+  localID?: string;
   email?: string;
   photoUrl?: string | null; // existing profile photo URL
   tem_biometria?: boolean;
   biometry?: EmployeeBiometry | null;
   updatedAt?: string;
+}
+
+// Represents the external search API shape
+export interface SearchEmployee {
+  id: string;
+  name: string;
+  email?: string;
+  siteId?: string;
+  localId?: string;
+  faceTemplate?: string | null;
+  photoUrl?: string | null;
 }
 
 export interface GetEmployeeResponse {
@@ -33,4 +45,3 @@ export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
 }
-

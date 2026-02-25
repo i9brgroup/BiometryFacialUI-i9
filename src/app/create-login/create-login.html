@@ -1,0 +1,85 @@
+<div class="w-full min-h-screen flex bg-gray-100">
+<app-sidebar></app-sidebar>
+
+  <main class="flex-1">
+    <nav>
+      <!-- Topbar -->
+      <header class="top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-center p-8">
+        <div class="text-2xl font-bold text-[#0b3b66]">i9 - Gestão de Biometria</div>
+      </header>
+    </nav>
+
+    <div class="w-full flex flex-col gap-4 items-center justify-center pt-4">
+      <h1 class="text-[18px] font-medium text-[#0b3b66]">Preencha o formulario</h1>
+      <div class="gap-24 items-center justify-center max-w-5xl w-full">
+
+        <section class="form-container w-full mx-auto max-h-full p-10 flex bg-white rounded-2xl shadow-xl">
+          <form [formGroup]="form" (ngSubmit)="submit()" aria-label="Formulario de cadastro de login" class="w-full grid grid-cols-2 gap-x-10 gap-y-6">
+            <mat-form-field class="w-full">
+              <mat-label>Nome do usuario</mat-label>
+              <input type="text" matInput formControlName="username" placeholder="Ex. João Felix" aria-required="true" autocomplete="username"/>
+              <mat-error *ngIf="form.get('username')?.invalid && (form.get('username')?.touched || form.get('username')?.dirty)">
+                Nome é obrigatório
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+              <mat-label>Email</mat-label>
+              <input
+                matInput
+                placeholder="pat@example.com"
+                formControlName="email"
+                (blur)="updateErrorMessage()"
+                required
+              />
+              <mat-error *ngIf="emailFormControl.invalid && (emailFormControl.dirty || emailFormControl.touched)">
+                {{ errorMessage() || 'Email inválido' }}
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+              <mat-label>Enter your password</mat-label>
+              <input formControlName="password" matInput [type]="hide() ? 'password' : 'text'" />
+              <button mat-icon-button matSuffix type="button" (click)="clickEvent($event)" aria-label="Toggle password visibility" [attr.aria-pressed]="!hide()">
+                <mat-icon>{{ hide() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-error *ngIf="form.get('password')?.invalid && (form.get('password')?.touched || form.get('password')?.dirty)">
+                Senha é obrigatória
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field hintLabel="Max 10 characters" class="w-full">
+              <mat-label>Site ID (ID da Empresa)</mat-label>
+              <input matInput maxlength="10" placeholder="Ex. 650" (input)="onInput($event)" formControlName="siteId"/>
+              <mat-hint align="end">{{value().length}}/10</mat-hint>
+              <mat-error *ngIf="form.get('siteId')?.invalid && (form.get('siteId')?.touched || form.get('siteId')?.dirty)">
+                Site ID é obrigatório
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+              <mat-label>Role</mat-label>
+              <mat-select formControlName="roles">
+                <mat-option value="SUPER_ADMIN">Administrador Global(Apenas i9)</mat-option>
+                <mat-option value="ADMIN">Administrador</mat-option>
+                <mat-option value="USER">Usuario</mat-option>
+                <mat-option value="DEFAULT">Padrão</mat-option>
+              </mat-select>
+              <mat-hint align="end">Clique no ícone do dropdown ^</mat-hint>
+              <mat-error *ngIf="form.get('roles')?.invalid && (form.get('roles')?.touched || form.get('roles')?.dirty)">
+                Role é obrigatório
+              </mat-error>
+            </mat-form-field>
+
+            <div class="col-span-2 flex gap-4 justify-end">
+              <button mat-raised-button color="primary" type="submit" class="bg-[#0b3b66] text-white px-6 py-2 rounded">Cadastrar</button>
+              <button mat-stroked-button type="button" class="px-6 py-2 rounded" (click)="formDirective.resetForm()">Cancelar</button>
+            </div>
+
+          </form>
+        </section>
+      </div>
+    </div>
+
+    </main>
+</div>

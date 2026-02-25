@@ -1,6 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import "tailwindcss";
+@import "@angular/material/prebuilt-themes/indigo-pink.css";
 
 :root{
   --bg: #F3F4F6; /* light gray */
@@ -13,5 +14,39 @@
   --radius: 10px;
 }
 
-html, body { height: 100%; }
-body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: var(--bg); margin: 0; }
+/* View transitions styling */
+@supports (view-transition: flow) {
+  html {
+    view-transition-name: route-transition;
+  }
+
+  /* The following gives a subtle fade+translate effect */
+  .route-enter, .route-leave {
+    transition: transform 320ms cubic-bezier(.2,.8,.2,1), opacity 260ms ease;
+  }
+  .route-enter {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  .route-leave {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Fallback for browsers without view transitions API */
+.route-view-anim-enter {
+  animation: viewFadeIn 300ms ease both;
+}
+.route-view-anim-leave {
+  animation: viewFadeOut 260ms ease both;
+}
+
+@keyframes viewFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes viewFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-6px); }
+}
