@@ -38,7 +38,7 @@
               </div>
               <div>
                 <div class="text-lg font-semibold text-[#0b3b66]">{{ fullName() || '—' }}</div>
-                <div class="text-sm text-gray-500">ID: <span class="text-gray-700">{{ employee()?.badge || '-' }}</span>
+                <div class="text-sm text-gray-500">ID: <span class="text-gray-700">{{ employee()?.localID || employee()?.id }}</span>
                 </div>
                 <div class="text-sm text-gray-500">SiteID: <span
                   class="text-gray-700">{{ employee()?.siteID || '-' }}</span></div>
@@ -128,44 +128,51 @@
 
     <!-- Search Results Modal -->
     @if (isShown()){
-      <div *ngIf="searchModalOpen()" class="leave-container fixed inset-0 z-60 flex items-center justify-center bg-black/40" role="dialog"
-           aria-modal="true" aria-labelledby="searchResultsTitle" animate.leave="leaving">
-        <div class="bg-white rounded-xl shadow-lg w-[640px] max-w-full mx-4 max-h-[80vh] overflow-hidden">
-          <header class="flex items-center justify-between p-4 border-b">
-            <h3 id="searchResultsTitle" class="text-lg font-medium">Resultados da busca</h3>
-            <button class="text-gray-600" (click)="searchModalOpen.set(false); isShown.set(false)" aria-label="Fechar resultados">✕</button>
+      <div *ngIf="searchModalOpen()" class="fixed inset-0 z-60 flex items-center justify-center bg-black/30 backdrop-blur-sm" role="dialog"
+           aria-modal="true" aria-labelledby="searchResultsTitle">
+        <div class="bg-white rounded-2xl shadow-2xl w-[500px] max-w-full mx-4 h-[75vh] flex flex-col overflow-hidden border border-gray-100">
+          <header class="flex items-center justify-between px-6 py-4 border-b border-gray-50 shrink-0">
+            <h3 id="searchResultsTitle" class="text-base font-semibold text-[#0b3b66]">Resultados da Busca</h3>
+            <button class="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors p-1" (click)="searchModalOpen.set(false); isShown.set(false)" aria-label="Fechar resultados">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
           </header>
-          <!-- Scrollable body: limit height and add overflow -->
-          <div class="p-4 overflow-y-auto max-h-[60vh]">
-            <div *ngIf="searching()" class="py-8 text-center">Buscando...</div>
+
+          <!-- Results List -->
+          <div class="overflow-y-auto flex-1 custom-scrollbar">
+            <div *ngIf="searching()" class="py-12 flex flex-col items-center justify-center gap-3">
+               <div class="w-6 h-6 border-2 border-[#0b3b66] border-t-transparent rounded-full animate-spin"></div>
+               <span class="text-sm text-gray-500 font-medium">Buscando...</span>
+            </div>
 
             <div *ngIf="!searching()">
-              <div *ngIf="searchError()" class="text-red-500">{{ searchError() }}</div>
+              <div *ngIf="searchError()" class="p-6 text-center text-red-500 text-sm bg-red-50 m-4 rounded-lg">{{ searchError() }}</div>
 
-              <div *ngIf="searchResults().length === 0 && !searchError()" class="py-8 text-center text-gray-600">Nenhum
-                usuário encontrado
+              <div *ngIf="searchResults().length === 0 && !searchError()" class="py-16 text-center">
+                <div class="text-4xl mb-2">🔍</div>
+                <div class="text-sm text-gray-400">Funcionário não encontrado</div>
               </div>
 
-              <ul *ngIf="searchResults().length > 0" class="divide-y">
+              <ul *ngIf="searchResults().length > 0" class="divide-y divide-gray-50">
                 <li *ngFor="let u of searchResults()"
-                    class="px-4 py-3 hover:bg-gray-50 flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                    class="px-6 py-4 hover:bg-blue-50/30 flex items-center justify-between transition-colors group">
+                  <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 bg-gray-50 rounded-full overflow-hidden flex items-center justify-center border border-gray-100 group-hover:border-blue-100 transition-colors">
                       <img *ngIf="u.photoUrl; else smallPlaceholder" [src]="u.photoUrl" alt="Foto de {{u.name}}"
                            class="w-full h-full object-cover"/>
                       <ng-template #smallPlaceholder>
-                        <span class="text-lg">👤</span>
+                        <span class="text-lg opacity-40">👤</span>
                       </ng-template>
                     </div>
-                    <div>
-                      <div class="font-medium text-gray-900">{{ u.name }}</div>
-                      <div class="text-sm text-gray-500">ID: {{ u.id }} — Site: {{ u.siteId || '-' }}</div>
+                    <div class="flex flex-col">
+                      <div class="text-sm font-semibold text-gray-800 group-hover:text-[#0b3b66] transition-colors leading-tight">{{ u.name }}</div>
+                      <div class="text-xs text-gray-400 mt-0.5">ID: <span class="text-gray-500">{{ u.localId || u.id }}</span> • Site: <span class="text-gray-500">{{ u.siteId || '-' }}</span></div>
                     </div>
                   </div>
-                  <div>
-                    <button class="px-3 py-1 rounded bg-[#0b3b66] text-white" (click)="selectEmployee(u); isShown.set(false)">Selecionar
-                    </button>
-                  </div>
+                  <button class="px-4 py-1.5 rounded-full text-xs font-bold text-[#0b3b66] border border-[#0b3b66]/20 hover:bg-[#0b3b66] hover:text-white cursor-pointer transition-all active:scale-95"
+                          (click)="selectEmployee(u); isShown.set(false); searchModalOpen.set(false)">
+                    Selecionar
+                  </button>
                 </li>
               </ul>
             </div>

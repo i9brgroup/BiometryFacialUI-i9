@@ -10,8 +10,9 @@ import {
 } from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatPaginatorModule, PageEvent} from '@angular/material/paginator';
 import {EmployeeService} from './employee.service';
-import {ApiError, Employee, SearchEmployee} from './employee.model';
+import {ApiError, Employee, Page, SearchEmployee} from './employee.model';
 import {SidebarComponent} from '../shared/sidebar/sidebar.component';
 import {Router} from '@angular/router';
 
@@ -19,7 +20,7 @@ import {Router} from '@angular/router';
 @Component({
   selector: 'app-employee-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SidebarComponent, MatPaginatorModule],
   templateUrl: './employee-manager.component.html',
   styleUrls: ['./employee-manager.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -87,9 +88,11 @@ export class EmployeeManagerComponent {
 
   // New: perform search and open results modal
   performSearch(term: string) {
-    this.isShown.update((isShown) => !isShown);
     const t = term?.trim();
     if (!t) return;
+
+    this.isShown.set(true);
+    this.searchModalOpen.set(true);
     this.searching.set(true);
     this.searchError.set(null);
     this.searchResults.set([]);
@@ -97,18 +100,18 @@ export class EmployeeManagerComponent {
     this.employeeService.searchEmployees(t).subscribe({
       next: (res) => {
         this.searching.set(false);
-        this.searchResults.set(res || []);
-        this.searchModalOpen.set(true);
+        this.searchResults.set(res ? [res] : []);
       },
       error: (err: ApiError) => {
         this.searching.set(false);
-        const msg = err?.message || 'Erro ao buscar usuários';
+        const msg = err.status === 404 ? 'Funcionário não encontrado' : (err?.message || 'Erro ao buscar usuário');
         this.searchError.set(msg);
         this.searchResults.set([]);
-        this.searchModalOpen.set(true);
       },
     });
   }
+
+  // Removed handlePageEvent as pagination is no longer supported by the API
 
   selectEmployee(emp: SearchEmployee) {
     if (!emp) return;
@@ -120,6 +123,7 @@ export class EmployeeManagerComponent {
       lastName: split.slice(1).join(' ') ?? '',
       badge: emp.id,
       siteID: emp.siteId,
+      localID: emp.localId,
       tem_biometria: !!emp.faceTemplate,
       photoUrl: (emp as any).photoUrl ?? null,
       email: emp.email,
@@ -359,10 +363,9 @@ export class EmployeeManagerComponent {
 
   private refreshEmployeeData(employeeId: string) {
     this.employeeService.searchEmployees(employeeId).subscribe({
-      next: (results) => {
+      next: (updatedEmp) => {
         this.saving.set(false);
-        if (results && results.length > 0) {
-          const updatedEmp = results[0];
+        if (updatedEmp) {
           this.selectedSearchEmployee.set(updatedEmp);
 
           const split = (updatedEmp.name || '').split(' ');
@@ -372,6 +375,7 @@ export class EmployeeManagerComponent {
             lastName: split.slice(1).join(' ') ?? '',
             badge: updatedEmp.id,
             siteID: updatedEmp.siteId,
+            localID: updatedEmp.localId,
             tem_biometria: !!updatedEmp.faceTemplate,
             photoUrl: (updatedEmp as any).photoUrl ?? null,
             email: updatedEmp.email,

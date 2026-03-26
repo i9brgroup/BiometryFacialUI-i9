@@ -29,11 +29,34 @@ button:focus, input:focus, [role="button"]:focus {
     transform 500ms ease-out;
 }
 
-.toggle-btn {
+/* Scrollbar customizada minimalista */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
-  border: 1px solid var(#0b3b66, black);
-  color: var(#0b3b66, black);
-  padding: 10px 24px;
-  border-radius: 8px;
-  cursor: pointer;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
+/* Garante que o mat-paginator não quebre o layout minimalista */
+::ng-deep .mat-mdc-paginator {
+  font-family: inherit !important;
+}
+
+::ng-deep .mat-mdc-paginator-container {
+  min-height: 48px !important;
+  padding: 0 16px !important;
+}
+
+::ng-deep .mat-mdc-paginator-range-label {
+  margin: 0 16px !important;
 }

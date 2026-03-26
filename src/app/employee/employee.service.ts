@@ -2,7 +2,7 @@ import {inject, Injectable, WritableSignal} from '@angular/core';
 import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 import {Observable, throwError} from 'rxjs';
 import {catchError, map} from 'rxjs/operators';
-import {ApiError, Employee, SearchEmployee,} from './employee.model';
+import {ApiError, Employee, Page, SearchEmployee,} from './employee.model';
 import {AuthService} from '../auth.service';
 import {Router} from '@angular/router';
 
@@ -12,15 +12,17 @@ export class EmployeeService {
   private auth = inject(AuthService);
   private router = inject(Router);
 
-  searchEmployees(term: string): Observable<SearchEmployee[]> {
+  searchEmployees(term: string): Observable<SearchEmployee> {
     const q = term?.trim();
     if (!q) {
       return throwError(() => this.buildApiError(400, 'Termo de busca vazio'));
     }
-
     const url = `http://localhost:8080/api/v1/employees/search-employees/${encodeURIComponent(q)}`;
-    return this.http.get<SearchEmployee[]>(url).pipe(
-      map((arr) => (arr || []).map((s) => ({ ...s, photoUrl: (s as any).photoUrl ?? (s as any).urlPhoto ?? null }))),
+    return this.http.get<SearchEmployee>(url).pipe(
+      map((s) => ({
+        ...s,
+        photoUrl: (s as any).photoUrl ?? (s as any).urlPhoto ?? null,
+      })),
       catchError((err) => this.handleError(err)),
     );
   }
