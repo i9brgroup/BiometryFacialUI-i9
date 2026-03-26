@@ -15,8 +15,8 @@ export class TokenInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = this.auth.getToken();
+    const isLoginRequest = req.url.includes('/auth/login');
 
-    // Decide whether to attach Authorization header
     const shouldAttach = this.allowedPrefixes.some((p) => req.url.startsWith(p));
 
     let reqToSend = req;
@@ -37,36 +37,40 @@ export class TokenInterceptor implements HttpInterceptor {
         if (err instanceof HttpErrorResponse) {
           status = err.status || 0;
           const body = err.error;
-          // HTML detection
+
+          // 1. Detecta se é HTML (como você já fazia)
           isHtmlResponse = typeof body === 'string' && (body.trim().startsWith('<!doctype') || body.trim().startsWith('<html'));
 
-          // Unauthorized/forbidden
-          if (status === 401 || status === 403) shouldLogout = true;
-
-          // Some servers reply with HTML (login page) or redirect to login causing parser issues
-          if (isHtmlResponse) shouldLogout = true;
-
-          // Collect message
-          message = err.message || (typeof body === 'string' ? body : JSON.stringify(body));
-        } else if (err instanceof Error) {
-          // Generic JS Error — HttpClient parsing issues surface here with messages like "Http failure during parsing for ..."
-          const m = err.message || '';
-          if (m.includes('Http failure during parsing') || m.includes('Unexpected token') || m.includes('Unexpected end of JSON input')) {
-            shouldLogout = true;
+          // 2. Tenta extrair a mensagem do JSON (se o campo for 'message')
+          if (body && typeof body === 'object' && 'message' in body) {
+            message = body.message;
+          } else if (typeof body === 'string' && !isHtmlResponse) {
+            message = body;
           }
-          message = m;
+
+          if (status === 401 || status === 403 || isHtmlResponse) {
+            if (!isLoginRequest) {
+              shouldLogout = false; // Prevents forced logout based on issue description
+              // Display error at the top via global state (AuthService)
+              const displayMsg = `Erro ${status}: ${message}`;
+              this.auth.apiError.set(displayMsg);
+            } else {
+              shouldLogout = true;
+            }
+          } else if (status !== 0 && !isLoginRequest) {
+            // Other API errors (non-login) should also show at the top
+            const displayMsg = `Erro ${status}: ${message}`;
+            this.auth.apiError.set(displayMsg);
+          }
         }
 
         if (shouldLogout) {
-          try {
-            this.auth.logout();
-            this.router.navigateByUrl('/login');
-          } catch {}
-          const apiErr = { status, message: 'Sessão inválida ou servidor retornou conteúdo inesperado. Faça login novamente.' };
-          return throwError(() => apiErr);
+          this.auth.logout();
+          this.router.navigateByUrl('/login');
         }
 
-        return throwError(() => err);
+        const apiErr = { status, message };
+        return throwError(() => apiErr);
       }),
     );
   }

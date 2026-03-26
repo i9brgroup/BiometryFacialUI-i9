@@ -15,6 +15,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly STORAGE_KEY = 'app_token';
   error = signal<string | null>(null);
+  apiError: any;
 
   login(payload: LoginPayload): Observable<{ token: string }> {
     return this.http.post<{ token: string }>('http://localhost:8080/api/v1/auth/login', payload).pipe(
