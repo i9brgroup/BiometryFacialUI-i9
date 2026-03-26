@@ -1,85 +1,121 @@
-<div class="w-full min-h-screen flex bg-gray-100">
-<app-sidebar></app-sidebar>
+<div class="min-h-screen flex bg-[#f8fafc]">
+  <app-sidebar></app-sidebar>
 
-  <main class="flex-1">
-    <nav>
-      <!-- Topbar -->
-      <header class="top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-center p-8">
-        <div class="text-2xl font-bold text-[#0b3b66]">i9 - Gestão de Biometria</div>
-      </header>
-    </nav>
-
-    <div class="w-full flex flex-col gap-4 items-center justify-center pt-4">
-      <h1 class="text-[18px] font-medium text-[#0b3b66]">Preencha o formulario</h1>
-      <div class="gap-24 items-center justify-center max-w-5xl w-full">
-
-        <section class="form-container w-full mx-auto max-h-full p-10 flex bg-white rounded-2xl shadow-xl">
-          <form [formGroup]="form" (ngSubmit)="submit()" aria-label="Formulario de cadastro de login" class="w-full grid grid-cols-2 gap-x-10 gap-y-6">
-            <mat-form-field class="w-full">
-              <mat-label>Nome do usuario</mat-label>
-              <input type="text" matInput formControlName="username" placeholder="Ex. João Felix" aria-required="true" autocomplete="username"/>
-              <mat-error *ngIf="form.get('username')?.invalid && (form.get('username')?.touched || form.get('username')?.dirty)">
-                Nome é obrigatório
-              </mat-error>
-            </mat-form-field>
-
-            <mat-form-field class="w-full">
-              <mat-label>Email</mat-label>
-              <input
-                matInput
-                placeholder="pat@example.com"
-                formControlName="email"
-                (blur)="updateErrorMessage()"
-                required
-              />
-              <mat-error *ngIf="emailFormControl.invalid && (emailFormControl.dirty || emailFormControl.touched)">
-                {{ errorMessage() || 'Email inválido' }}
-              </mat-error>
-            </mat-form-field>
-
-            <mat-form-field class="w-full">
-              <mat-label>Enter your password</mat-label>
-              <input formControlName="password" matInput [type]="hide() ? 'password' : 'text'" />
-              <button mat-icon-button matSuffix type="button" (click)="clickEvent($event)" aria-label="Toggle password visibility" [attr.aria-pressed]="!hide()">
-                <mat-icon>{{ hide() ? 'visibility_off' : 'visibility' }}</mat-icon>
-              </button>
-              <mat-error *ngIf="form.get('password')?.invalid && (form.get('password')?.touched || form.get('password')?.dirty)">
-                Senha é obrigatória
-              </mat-error>
-            </mat-form-field>
-
-            <mat-form-field hintLabel="Max 10 characters" class="w-full">
-              <mat-label>Site ID (ID da Empresa)</mat-label>
-              <input matInput maxlength="10" placeholder="Ex. 650" (input)="onInput($event)" formControlName="siteId"/>
-              <mat-hint align="end">{{value().length}}/10</mat-hint>
-              <mat-error *ngIf="form.get('siteId')?.invalid && (form.get('siteId')?.touched || form.get('siteId')?.dirty)">
-                Site ID é obrigatório
-              </mat-error>
-            </mat-form-field>
-
-            <mat-form-field class="w-full">
-              <mat-label>Role</mat-label>
-              <mat-select formControlName="roles">
-                <mat-option value="SUPER_ADMIN">Administrador Global(Apenas i9)</mat-option>
-                <mat-option value="ADMIN">Administrador</mat-option>
-                <mat-option value="USER">Usuario</mat-option>
-                <mat-option value="DEFAULT">Padrão</mat-option>
-              </mat-select>
-              <mat-hint align="end">Clique no ícone do dropdown ^</mat-hint>
-              <mat-error *ngIf="form.get('roles')?.invalid && (form.get('roles')?.touched || form.get('roles')?.dirty)">
-                Role é obrigatório
-              </mat-error>
-            </mat-form-field>
-
-            <div class="col-span-2 flex gap-4 justify-end">
-              <button mat-raised-button color="primary" type="submit" class="bg-[#0b3b66] text-white px-6 py-2 rounded">Cadastrar</button>
-              <button mat-stroked-button type="button" class="px-6 py-2 rounded" (click)="formDirective.resetForm()">Cancelar</button>
-            </div>
-
-          </form>
-        </section>
+  <main class="flex-1 ml-64 p-10 overflow-y-auto custom-scrollbar">
+    <!-- Global API Error Alert (Top) -->
+    <div *ngIf="auth.apiError()" class="mb-6 animate-fade-in relative max-w-4xl mx-auto">
+      <div class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <span class="text-xs font-black uppercase tracking-widest block">Alerta de Sistema</span>
+            <span class="text-sm font-bold">{{ auth.apiError() }}</span>
+          </div>
+        </div>
+        <button (click)="auth.apiError.set(null)" class="text-red-400 hover:text-red-600 transition-colors cursor-pointer p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </div>
 
-    </main>
+    <!-- Topbar -->
+    <header class="flex items-center justify-between mb-10 pb-6 border-b border-slate-200">
+      <div class="flex items-center gap-4">
+        <div class="w-8 h-8 bg-[#0b3b66] rounded flex items-center justify-center shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-black text-[#0b3b66] uppercase tracking-tight">Gestão de Acessos</h1>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Controle de Operadores e Permissões</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto animate-fade-in">
+      <div class="mb-10">
+        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Novo Operador</h2>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Preencha as credenciais corporativas abaixo</p>
+      </div>
+
+      <section class="pro-card p-10 border-slate-200">
+        <form [formGroup]="form" (ngSubmit)="submit()" aria-label="Formulario de cadastro de login" class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Nome Completo</mat-label>
+            <input type="text" matInput formControlName="username" placeholder="Ex. João Silva" aria-required="true" autocomplete="username"/>
+            <mat-icon matPrefix class="text-slate-400 mr-2">person</mat-icon>
+            <mat-error *ngIf="form.get('username')?.invalid && (form.get('username')?.touched || form.get('username')?.dirty)">
+              Nome é obrigatório
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Email Corporativo</mat-label>
+            <input
+              matInput
+              placeholder="exemplo@i9.com.br"
+              formControlName="email"
+              (blur)="updateErrorMessage()"
+              required
+            />
+            <mat-icon matPrefix class="text-slate-400 mr-2">email</mat-icon>
+            <mat-error *ngIf="emailFormControl.invalid && (emailFormControl.dirty || emailFormControl.touched)">
+              {{ errorMessage() || 'Email inválido' }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Senha de Acesso</mat-label>
+            <input formControlName="password" matInput [type]="hide() ? 'password' : 'text'" />
+            <mat-icon matPrefix class="text-slate-400 mr-2">lock</mat-icon>
+            <button mat-icon-button matSuffix type="button" (click)="clickEvent($event)" aria-label="Toggle password visibility" [attr.aria-pressed]="!hide()">
+              <mat-icon>{{ hide() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="form.get('password')?.invalid && (form.get('password')?.touched || form.get('password')?.dirty)">
+              Senha é obrigatória
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Site ID (Unidade)</mat-label>
+            <input matInput maxlength="10" placeholder="Ex. 650" (input)="onInput($event)" formControlName="siteId"/>
+            <mat-icon matPrefix class="text-slate-400 mr-2">business</mat-icon>
+            <mat-hint align="end" class="text-[10px] uppercase font-bold text-slate-300">{{value().length}}/10</mat-hint>
+            <mat-error *ngIf="form.get('siteId')?.invalid && (form.get('siteId')?.touched || form.get('siteId')?.dirty)">
+              Site ID é obrigatório
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="w-full md:col-span-2" appearance="outline">
+            <mat-label>Nível de Permissão (Role)</mat-label>
+            <mat-select formControlName="roles">
+              <mat-option value="SUPER_ADMIN">Administrador Global (Apenas i9)</mat-option>
+              <mat-option value="ADMIN">Administrador de Unidade</mat-option>
+              <mat-option value="USER">Operador Biométrico</mat-option>
+              <mat-option value="DEFAULT">Acesso Padrão</mat-option>
+            </mat-select>
+            <mat-icon matPrefix class="text-slate-400 mr-2">verified_user</mat-icon>
+            <mat-error *ngIf="form.get('roles')?.invalid && (form.get('roles')?.touched || form.get('roles')?.dirty)">
+              Role é obrigatório
+            </mat-error>
+          </mat-form-field>
+
+          <div class="md:col-span-2 flex gap-4 pt-6">
+            <button mat-flat-button class="flex-1 py-7 rounded font-bold text-xs uppercase tracking-widest btn-active-scale shadow-sm" style="background-color: #0b3b66; color: white;">
+              Finalizar Cadastro de Operador
+            </button>
+            <button mat-stroked-button type="button" class="px-10 py-7 rounded font-bold text-xs uppercase tracking-widest text-slate-500 border-slate-200 hover:bg-slate-50 btn-active-scale" (click)="formDirective.resetForm()">
+              Limpar
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
 </div>

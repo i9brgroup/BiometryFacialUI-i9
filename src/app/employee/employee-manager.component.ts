@@ -15,6 +15,7 @@ import {EmployeeService} from './employee.service';
 import {ApiError, Employee, Page, SearchEmployee} from './employee.model';
 import {SidebarComponent} from '../shared/sidebar/sidebar.component';
 import {Router} from '@angular/router';
+import {AuthService} from '../auth.service';
 
 
 @Component({
@@ -31,6 +32,7 @@ export class EmployeeManagerComponent {
 
   private employeeService = inject(EmployeeService);
   private cd = inject(ChangeDetectorRef);
+  public auth = inject(AuthService);
 
   @ViewChild('modalVideo') modalVideoRef?: ElementRef<HTMLVideoElement>;
 
@@ -77,11 +79,6 @@ export class EmployeeManagerComponent {
   // Public API
   setMirror(value: boolean) {
     this.mirror.set(value);
-    // If camera is active, update existing video element transform
-    const modalVideo = (this.modalVideoRef && this.modalVideoRef.nativeElement) ?? document.getElementById('modalVideoEl') ?? document.querySelector<HTMLVideoElement>('#modalVideoEl');
-    if (modalVideo) {
-      modalVideo.style.transform = this.mirror() ? 'scaleX(-1)' : 'none';
-    }
   }
 
   // removed unused search() helper - use performSearch directly from template
@@ -252,9 +249,6 @@ export class EmployeeManagerComponent {
       videoElement.setAttribute('playsinline', '');
       videoElement.autoplay = true;
       videoElement.style.objectFit = 'cover';
-
-      // Apply mirror transform according to flag
-      videoElement.style.transform = this.mirror() ? 'scaleX(-1)' : 'none';
 
       videoElement.srcObject = stream;
       await videoElement.play();

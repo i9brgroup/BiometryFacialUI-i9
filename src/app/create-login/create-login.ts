@@ -46,7 +46,7 @@ export class CreateLogin {
   errorMessage = signal('')
   hide = signal(true);
   private fb = inject(FormBuilder);
-  private readonly auth = inject(AuthService);
+  public readonly auth = inject(AuthService);
   @ViewChild(FormGroupDirective) formDirective!: FormGroupDirective;
 
   constructor() {
