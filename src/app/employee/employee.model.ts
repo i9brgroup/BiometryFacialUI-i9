@@ -1,10 +1,3 @@
-export interface EmployeeBiometry {
-  type: 'face' | 'fingerprint' | 'iris';
-  version?: string;
-  capturedAt?: string; // ISO timestamp
-  metadata?: Record<string, string | number | boolean>;
-}
-
 export interface Employee {
   id: string;
   firstName: string;
@@ -15,7 +8,6 @@ export interface Employee {
   email?: string;
   photoUrl?: string | null; // existing profile photo URL
   tem_biometria?: boolean;
-  biometry?: EmployeeBiometry | null;
   updatedAt?: string;
 }
 
