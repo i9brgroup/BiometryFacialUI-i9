@@ -13,9 +13,9 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
 import {MatSelectModule} from '@angular/material/select';
 import {MatDividerModule} from '@angular/material/divider';
-import {CreateLoginPayload, CreateLoginResponse} from './CreateLoginPayload';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
+import { CreateLoginPayload, CreateLoginResponse } from '../auth.model';
+import { AdminService } from './admin.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-create-login',
@@ -39,7 +39,7 @@ import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 export class CreateLogin {
 
   private snackBar = inject(MatSnackBar);
-  private readonly http = inject(HttpClient);
+  private adminService = inject(AdminService);
   loading = signal(false);
   error = signal<string | null>(null);
   protected readonly value = signal('');
@@ -56,7 +56,6 @@ export class CreateLogin {
   }
 
   clickEvent(event: MouseEvent) {
-    // toggle visibility and prevent button from submitting the form
     this.hide.update(v => !v);
     event.preventDefault();
     event.stopPropagation();
@@ -76,9 +75,9 @@ export class CreateLogin {
 
   updateErrorMessage() {
     if (this.form.hasError('required')) {
-      this.errorMessage.set('You must enter a value');
+      this.errorMessage.set('Campo obrigatório');
     } else if (this.form.hasError('email')) {
-      this.errorMessage.set('Not a valid email');
+      this.errorMessage.set('Email inválido');
     } else {
       this.errorMessage.set('');
     }
@@ -97,51 +96,30 @@ export class CreateLogin {
   }
 
   async submit() {
-
     this.error.set(null);
-    const {username, email, password, siteId, roles} = this.form.value as CreateLoginPayload;
-
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.error.set('Preencha todos os campos.');
       return;
     }
 
+    const payload = this.form.value as CreateLoginPayload;
+
     try {
       this.loading.set(true);
-      const response: CreateLoginResponse = await firstValueFrom(this.sendCreateRequest({username, email, password, siteId, roles}));
+      const response: CreateLoginResponse = await firstValueFrom(this.adminService.createLogin(payload));
       if (response.status === 'success') {
         this.error.set('Login criado com sucesso!');
         this.openSnackBar('Login criado com sucesso!', 'Fechar');
+        this.formDirective.resetForm();
       }
-    }catch (error: any) {
+    } catch (error: any) {
       const message = error?.error?.detail || error?.message || 'Erro ao criar login';
       this.error.set(String(message));
     } finally {
       this.loading.set(false);
-      this.formDirective.resetForm();
     }
   }
-
-  sendCreateRequest(createDTO: CreateLoginPayload): Observable<any>{
-    const token = this.auth.getToken();
-    let headers = new HttpHeaders();
-    const url = `http://localhost:8080/api/v1/user-login/create`;
-    if (token){
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-
-    const payload = {
-      username: createDTO.username,
-      email: createDTO.email,
-      password: createDTO.password,
-      siteId: createDTO.siteId,
-      roles: createDTO.roles
-    }
-
-    return this.http.post(url, payload, { headers });
-  }
-
 }
 
-export default CreateLogin
+export default CreateLogin;

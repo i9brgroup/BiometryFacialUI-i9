@@ -1,57 +1,42 @@
-import {inject, Injectable, WritableSignal} from '@angular/core';
-import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
-import {Observable, throwError} from 'rxjs';
-import {catchError, map} from 'rxjs/operators';
-import {ApiError, Employee, Page, SearchEmployee,} from './employee.model';
-import {AuthService} from '../auth.service';
-import {Router} from '@angular/router';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { ApiError, Employee, EmployeeMapper, SearchEmployee } from './employee.model';
 
 @Injectable({ providedIn: 'root' })
 export class EmployeeService {
   private http = inject(HttpClient);
-  private auth = inject(AuthService);
-  private router = inject(Router);
 
-  searchEmployees(term: string): Observable<SearchEmployee> {
+  searchEmployees(term: string): Observable<Employee> {
     const q = term?.trim();
     if (!q) {
       return throwError(() => this.buildApiError(400, 'Termo de busca vazio'));
     }
-    const url = `http://localhost:8080/api/v1/employees/search-employees/${encodeURIComponent(q)}`;
+    const url = `/api/v1/employees/search-employees/${encodeURIComponent(q)}`;
     return this.http.get<SearchEmployee>(url).pipe(
-      map((s) => ({
-        ...s,
-        photoUrl: (s as any).photoUrl ?? (s as any).urlPhoto ?? null,
-      })),
+      map(s => EmployeeMapper.fromSearchEmployee(s)),
       catchError((err) => this.handleError(err)),
     );
   }
 
-  sendEmployeePayload(emp: SearchEmployee, file: File): Observable<any> {
-    const token = this.auth.getToken();
-    let headers = new HttpHeaders();
+  sendEmployeePayload(emp: Employee, file: File): Observable<any> {
     const formData = new FormData();
-
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-
     formData.append('file', file);
 
-    // This endpoint (FastAPI) does not expect a token in the header; send only JSON body
     const payload = {
       id: emp.id,
-      name: emp.name,
+      name: `${emp.firstName} ${emp.lastName}`,
       email: emp.email ?? '',
-      siteId: emp.siteId ?? '',
-      localId: emp.localId ?? '',
-      photoKey: file.name ?? '', // assuming file name is used as key
+      siteId: emp.siteID ?? '',
+      localId: emp.localID ?? '',
+      photoKey: file.name ?? '',
     };
 
     formData.append('payload', JSON.stringify(payload));
 
-    const url = `http://localhost:8080/api/v1/employees/process-payload`;
-    return this.http.post(url, formData, { headers }).pipe(catchError((err) => this.handleError(err)));
+    const url = `/api/v1/employees/process-payload`;
+    return this.http.post(url, formData).pipe(catchError((err) => this.handleError(err)));
   }
 
   private buildApiError(status: number, message: string): ApiError {

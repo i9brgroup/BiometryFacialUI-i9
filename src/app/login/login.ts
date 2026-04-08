@@ -1,14 +1,14 @@
-import {ChangeDetectionStrategy, Component, inject, NgModule, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {ReactiveFormsModule, FormBuilder, Validators} from '@angular/forms';
-import {Router} from '@angular/router';
-import {AuthService} from '../auth.service';
-import {firstValueFrom} from 'rxjs';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatInputModule} from '@angular/material/input';
-import {MatButtonModule} from '@angular/material/button';
-import {FormControl, FormGroupDirective, NgForm} from '@angular/forms';
-import {ErrorStateMatcher, ShowOnDirtyErrorStateMatcher} from '@angular/material/core';
+import { ChangeDetectionStrategy, Component, inject, NgModule, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../auth.service';
+import { firstValueFrom } from 'rxjs';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { FormControl, FormGroupDirective, NgForm } from '@angular/forms';
+import { ErrorStateMatcher, ShowOnDirtyErrorStateMatcher } from '@angular/material/core';
 
 @Component({
   selector: 'app-login',
@@ -50,13 +50,10 @@ export class Login {
     }
 
     const { email, password } = this.form.value as { email: string; password: string };
-
     try {
       this.loading.set(true);
       await firstValueFrom(this.auth.login({ email, password }));
-      // auth.service saves the token in localStorage
-      // redirecionar para a tela principal
-      await this.router.navigateByUrl('/employee');
+      await this.router.navigate(['/employee']);
     } catch (err: any) {
       const msg = err?.error?.detail || err?.message || 'Erro ao autenticar';
       this.error.set(String(msg));

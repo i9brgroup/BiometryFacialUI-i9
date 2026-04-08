@@ -68,3 +68,21 @@ export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
 }
+
+export class EmployeeMapper {
+  static fromSearchEmployee(emp: SearchEmployee): Employee {
+    const split = (emp.name || '').split(' ');
+    return {
+      id: emp.id,
+      firstName: split[0] ?? emp.name ?? '',
+      lastName: split.slice(1).join(' ') ?? '',
+      badge: emp.id,
+      siteID: emp.siteId,
+      localID: emp.localId,
+      tem_biometria: !!emp.faceTemplate,
+      photoUrl: (emp as any).photoUrl ?? null,
+      email: emp.email,
+    } as Employee;
+  }
+}
+

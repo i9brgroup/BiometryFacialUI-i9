@@ -2,8 +2,6 @@ import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth.service';
-import {jwtDecode} from 'jwt-decode';
-import {TokenPayload} from '../../login/TokenPayload';
 
 @Component({
   selector: 'app-sidebar',
@@ -79,11 +77,10 @@ import {TokenPayload} from '../../login/TokenPayload';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SidebarComponent {
-  modalOpen = signal(false);
   public readonly router = inject(Router);
-  private readonly auth = inject(AuthService);
-  error = signal<string | null>(null);
-  role = inject(AuthService).getRoleByToken();
+  public readonly auth = inject(AuthService);
+  modalOpen = signal(false);
+  role = this.auth.getRoleByToken();
 
   navTo(path: string) {
     this.auth.apiError.set(null);
@@ -99,11 +96,17 @@ export class SidebarComponent {
   }
 
   confirmLogout() {
-    // remove credentials
-    this.auth.logout();
-    this.modalOpen.set(false);
-    // navigate to login
-    this.router.navigateByUrl('/login');
+    this.auth.logout().subscribe({
+      next: () => {
+        this.modalOpen.set(false);
+        this.router.navigateByUrl('/login');
+      },
+      error: () => {
+        // Fallback: still navigate if API logout fails
+        this.modalOpen.set(false);
+        this.router.navigateByUrl('/login');
+      }
+    });
   }
 }
 

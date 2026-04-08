@@ -1,7 +1,7 @@
-import {inject} from '@angular/core';
-import {CanActivateFn, Router} from '@angular/router';
-import {AuthService} from './auth.service';
-import {MatSnackBar} from '@angular/material/snack-bar';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from './auth.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 export const authGuard: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
@@ -10,29 +10,28 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   const token = auth.getToken();
 
-  // Se não houver token, redireciona para login
+  // If there's no token, always redirect to login
   if (!token) {
     return router.createUrlTree(['/login']);
   }
 
-  const userRole = auth.getRoleByToken();
+  // If everything is fine (token exists and no specific role is needed)
   const expectedRole = route.data['expectedRole'];
+  if (!expectedRole) {
+    return true;
+  }
 
-  // Se houver uma role esperada e o usuário não a tiver
-  if (expectedRole && expectedRole !== userRole) {
-    const message = "Acesso negado. Você não possui permissões para acessar essa rota."
-    const action = "Fechar";
-
-    snackBar.open(message, action, {
+  // If a role is expected, verify it
+  const userRole = auth.getRoleByToken();
+  if (expectedRole !== userRole) {
+    snackBar.open("Acesso negado. Você não possui permissões suficientes.", "Fechar", {
       duration: 4000,
       horizontalPosition: 'center',
       verticalPosition: 'top',
     });
-
     return router.createUrlTree(['/employee']);
   }
 
-  // Se tudo estiver certo, permite o acesso
   return true;
 };
 

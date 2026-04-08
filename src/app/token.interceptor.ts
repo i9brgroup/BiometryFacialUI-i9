@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, throwError, BehaviorSubject } from 'rxjs';
+import { catchError, filter, take, switchMap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
 
@@ -10,12 +10,15 @@ export class TokenInterceptor implements HttpInterceptor {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
+  private isRefreshing = false;
+  private refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+
   // Only attach token to requests to these hosts/prefixes (API-specific)
-  private allowedPrefixes = ['http://localhost:8080/api', 'http://127.0.0.1:8000', '/api'];
+  private allowedPrefixes = ['/api'];
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = this.auth.getToken();
-    const isLoginRequest = req.url.includes('/auth/login');
+    const isAuthRequest = req.url.includes('/auth/');
 
     const shouldAttach = this.allowedPrefixes.some((p) => req.url.startsWith(p));
 
@@ -23,25 +26,30 @@ export class TokenInterceptor implements HttpInterceptor {
     if (shouldAttach) {
       const headers: Record<string, string> = { Accept: 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      reqToSend = req.clone({ setHeaders: headers });
+      
+      reqToSend = req.clone({ 
+        setHeaders: headers,
+        withCredentials: true // Required for HTTPOnly cookies (refreshToken)
+      });
     }
 
     return next.handle(reqToSend).pipe(
       catchError((err: unknown) => {
-        // Normalize many error shapes and trigger logout when appropriate
-        let shouldLogout = false;
-        let isHtmlResponse = false;
-        let message = 'Erro na requisição';
-        let status = 0;
-
         if (err instanceof HttpErrorResponse) {
-          status = err.status || 0;
+          const status = err.status || 0;
+          const isLoginRequest = req.url.includes('/auth/login');
+          const isRefreshRequest = req.url.includes('/auth/refresh');
+
+          // If 401 and not a login/refresh request, try to refresh
+          if (status === 401 && !isLoginRequest && !isRefreshRequest) {
+            return this.handle401Error(reqToSend, next);
+          }
+
+          // Handle other errors or errors that couldn't be refreshed
+          let message = 'Erro na requisição';
           const body = err.error;
+          const isHtmlResponse = typeof body === 'string' && (body.trim().startsWith('<!doctype') || body.trim().startsWith('<html'));
 
-          // 1. Detecta se é HTML (como você já fazia)
-          isHtmlResponse = typeof body === 'string' && (body.trim().startsWith('<!doctype') || body.trim().startsWith('<html'));
-
-          // 2. Tenta extrair a mensagem do JSON (se o campo for 'message')
           if (body && typeof body === 'object' && 'message' in body) {
             message = body.message;
           } else if (typeof body === 'string' && !isHtmlResponse) {
@@ -50,28 +58,64 @@ export class TokenInterceptor implements HttpInterceptor {
 
           if (status === 401 || status === 403 || isHtmlResponse) {
             if (!isLoginRequest) {
-              shouldLogout = false; // Prevents forced logout based on issue description
-              // Display error at the top via global state (AuthService)
-              const displayMsg = `Erro ${status}: ${message}`;
+              const displayMsg = `Sessão expirada ou sem permissão (${status})`;
               this.auth.apiError.set(displayMsg);
-            } else {
-              shouldLogout = true;
+              
+              // If it was a refresh request that failed with 401, logout
+              if (isRefreshRequest) {
+                this.logoutAndRedirect();
+              }
             }
           } else if (status !== 0 && !isLoginRequest) {
-            // Other API errors (non-login) should also show at the top
             const displayMsg = `Erro ${status}: ${message}`;
             this.auth.apiError.set(displayMsg);
           }
         }
 
-        if (shouldLogout) {
-          this.auth.logout();
-          this.router.navigateByUrl('/login');
-        }
-
-        const apiErr = { status, message };
-        return throwError(() => apiErr);
+        return throwError(() => err);
       }),
     );
+  }
+
+  private handle401Error(request: HttpRequest<any>, next: HttpHandler) {
+    if (!this.isRefreshing) {
+      this.isRefreshing = true;
+      this.refreshTokenSubject.next(null);
+
+      return this.auth.refreshToken().pipe(
+        switchMap((res) => {
+          this.isRefreshing = false;
+          this.refreshTokenSubject.next(res.accessToken);
+          return next.handle(this.addToken(request, res.accessToken));
+        }),
+        catchError((err) => {
+          this.isRefreshing = false;
+          this.logoutAndRedirect();
+          return throwError(() => err);
+        })
+      );
+    } else {
+      return this.refreshTokenSubject.pipe(
+        filter(token => token !== null),
+        take(1),
+        switchMap(token => {
+          return next.handle(this.addToken(request, token!));
+        })
+      );
+    }
+  }
+
+  private addToken(request: HttpRequest<any>, token: string) {
+    return request.clone({
+      setHeaders: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  }
+
+  private logoutAndRedirect() {
+    this.auth.logout().subscribe({
+      complete: () => this.router.navigateByUrl('/login')
+    });
   }
 }

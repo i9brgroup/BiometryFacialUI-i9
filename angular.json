@@ -63,7 +63,8 @@
               "buildTarget": "cadastro-faciais-i9:build:production"
             },
             "development": {
-              "buildTarget": "cadastro-faciais-i9:build:development"
+              "buildTarget": "cadastro-faciais-i9:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
