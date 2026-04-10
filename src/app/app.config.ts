@@ -11,7 +11,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     // Enable native View Transitions for smoother route changes when supported
-    provideRouter(routes),
+    provideRouter(routes, withViewTransitions()),
     provideHttpClient(withInterceptorsFromDi()),
     { provide: HTTP_INTERCEPTORS, useClass: TokenInterceptor, multi: true },
     provideAnimationsAsync(),
