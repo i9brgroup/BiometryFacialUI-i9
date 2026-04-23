@@ -5,7 +5,8 @@
     <!-- Global API Error Alert -->
     <div *ngIf="auth.apiError()" class="alert-banner animate-fade-in">
       <div class="alert-content">
-        <svg xmlns="http://www.w3.org/2000/svg" class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="alert-icon" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
@@ -84,11 +85,8 @@
               </span>
             </td>
             <td>
-              <button
-                class="btn-toggle btn-active-scale"
-                [class.btn-toggle-deactivate]="user.ativo"
-                [class.btn-toggle-activate]="!user.ativo"
-                (click)="openToggleModal(user)">
+              <button class="btn-toggle btn-active-scale" [class.btn-toggle-deactivate]="user.ativo"
+                [class.btn-toggle-activate]="!user.ativo" (click)="openToggleModal(user)">
                 {{ user.ativo ? 'Desativar' : 'Ativar' }}
               </button>
             </td>
@@ -104,7 +102,8 @@
         <span class="pagination-info">
           Página {{ currentPage() + 1 }} de {{ totalPages() }}
         </span>
-        <button class="pagination-btn" [disabled]="currentPage() >= totalPages() - 1" (click)="goToPage(currentPage() + 1)">
+        <button class="pagination-btn" [disabled]="currentPage() >= totalPages() - 1"
+          (click)="goToPage(currentPage() + 1)">
           Próxima ›
         </button>
       </div>
@@ -113,12 +112,17 @@
     <!-- Toggle Status Modal -->
     <div *ngIf="modalOpen()" class="modal-overlay animate-fade-in" role="dialog" aria-modal="true">
       <div class="modal-card">
-        <div class="modal-icon-wrap" [class.modal-icon-danger]="modalUser()?.ativo" [class.modal-icon-success]="!modalUser()?.ativo">
-          <svg *ngIf="modalUser()?.ativo" xmlns="http://www.w3.org/2000/svg" class="modal-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        <div class="modal-icon-wrap" [class.modal-icon-danger]="modalUser()?.ativo"
+          [class.modal-icon-success]="!modalUser()?.ativo">
+          <svg *ngIf="modalUser()?.ativo" xmlns="http://www.w3.org/2000/svg" class="modal-icon" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
           </svg>
-          <svg *ngIf="!modalUser()?.ativo" xmlns="http://www.w3.org/2000/svg" class="modal-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg *ngIf="!modalUser()?.ativo" xmlns="http://www.w3.org/2000/svg" class="modal-icon" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
 
@@ -142,7 +146,8 @@
           <div class="modal-info-row">
             <span class="modal-info-label">Status Atual</span>
             <span class="modal-info-value">
-              <span class="status-pill" [class.status-active]="modalUser()?.ativo" [class.status-inactive]="!modalUser()?.ativo">
+              <span class="status-pill" [class.status-active]="modalUser()?.ativo"
+                [class.status-inactive]="!modalUser()?.ativo">
                 {{ modalUser()?.ativo ? 'Ativo' : 'Inativo' }}
               </span>
             </span>
@@ -151,19 +156,15 @@
 
         <p class="modal-desc">
           {{ modalUser()?.ativo
-            ? 'O usuário perderá acesso ao sistema imediatamente.'
-            : 'O usuário terá acesso ao sistema restaurado.'
+          ? 'O usuário perderá acesso ao sistema imediatamente.'
+          : 'O usuário terá acesso ao sistema restaurado.'
           }}
         </p>
 
         <div class="modal-actions">
           <button class="modal-btn-secondary" (click)="closeToggleModal()" [disabled]="toggling()">Cancelar</button>
-          <button
-            class="modal-btn-confirm btn-active-scale"
-            [class.modal-btn-danger]="modalUser()?.ativo"
-            [class.modal-btn-success]="!modalUser()?.ativo"
-            (click)="confirmToggle()"
-            [disabled]="toggling()">
+          <button class="modal-btn-confirm btn-active-scale" [class.modal-btn-danger]="modalUser()?.ativo"
+            [class.modal-btn-success]="!modalUser()?.ativo" (click)="confirmToggle()" [disabled]="toggling()">
             <span *ngIf="toggling()" class="inline-spinner"></span>
             {{ modalUser()?.ativo ? 'Confirmar Desativação' : 'Confirmar Ativação' }}
           </button>

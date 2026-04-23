@@ -46,8 +46,13 @@ export class ManageUsersComponent implements OnInit {
   }
 
   async loadUsers(page: number = 0): Promise<void> {
-    this.loading.set(true);
     this.error.set(null);
+
+    // Only show loading spinner if this page is NOT cached
+    const isCached = this.userService.isCached(page, this.pageSize());
+    if (!isCached) {
+      this.loading.set(true);
+    }
 
     try {
       const res = await firstValueFrom(
