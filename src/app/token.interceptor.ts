@@ -18,14 +18,17 @@ export class TokenInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = this.auth.getToken();
-    const isAuthRequest = req.url.includes('/auth/');
-
+    const isRefreshRequest = req.url.includes('/auth/refresh');
     const shouldAttach = this.allowedPrefixes.some((p) => req.url.startsWith(p));
 
     let reqToSend = req;
     if (shouldAttach) {
       const headers: Record<string, string> = { Accept: 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      // Do NOT attach the expired token to the refresh request
+      if (token && !isRefreshRequest) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       
       reqToSend = req.clone({ 
         setHeaders: headers,
@@ -40,8 +43,9 @@ export class TokenInterceptor implements HttpInterceptor {
           const isLoginRequest = req.url.includes('/auth/login');
           const isRefreshRequest = req.url.includes('/auth/refresh');
 
-          // If 401 and not a login/refresh request, try to refresh
-          if (status === 401 && !isLoginRequest && !isRefreshRequest) {
+          // If 401/403 and not a login/refresh request, try to refresh
+          if ((status === 401 || status === 403) && !isLoginRequest && !isRefreshRequest) {
+            console.log(`[TokenInterceptor] Interceptado erro ${status}. Iniciando rotação de token para: ${req.url}`);
             return this.handle401Error(reqToSend, next);
           }
 
@@ -83,12 +87,14 @@ export class TokenInterceptor implements HttpInterceptor {
       this.refreshTokenSubject.next(null);
 
       return this.auth.refreshToken().pipe(
-        switchMap((res) => {
+        switchMap((newToken: string) => {
+          console.log('[TokenInterceptor] Token rotacionado com sucesso. Repetindo requisição original.');
           this.isRefreshing = false;
-          this.refreshTokenSubject.next(res.accessToken);
-          return next.handle(this.addToken(request, res.accessToken));
+          this.refreshTokenSubject.next(newToken);
+          return next.handle(this.addToken(request, newToken));
         }),
         catchError((err) => {
+          console.error('[TokenInterceptor] Falha ao rotacionar token. Deslogando usuário.', err);
           this.isRefreshing = false;
           this.logoutAndRedirect();
           return throwError(() => err);

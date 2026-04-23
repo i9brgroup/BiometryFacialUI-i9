@@ -6,7 +6,7 @@ export interface Employee {
   siteID?: string;
   localID?: string;
   email?: string;
-  photoUrl?: string | null; // existing profile photo URL
+  urlPhoto?: string | null; // existing profile photo URL
   tem_biometria?: boolean;
   updatedAt?: string;
 }
@@ -50,7 +50,7 @@ export interface SearchEmployee {
   siteId?: string;
   localId?: string;
   faceTemplate?: string | null;
-  photoUrl?: string | null;
+  urlPhoto?: string | null;
 }
 
 export interface GetEmployeeResponse {
@@ -80,7 +80,7 @@ export class EmployeeMapper {
       siteID: emp.siteId,
       localID: emp.localId,
       tem_biometria: !!emp.faceTemplate,
-      photoUrl: (emp as any).photoUrl ?? null,
+      urlPhoto: emp.urlPhoto ?? null,
       email: emp.email,
     } as Employee;
   }

@@ -191,7 +191,7 @@ export class EmployeeManagerComponent {
     this.errorState.set(null);
     this.statusMessage.set(null);
 
-    const file = new File([blob], emp.photoUrl || `${emp.id}_biometry.jpg`, { type: 'image/jpeg' });
+    const file = new File([blob], emp.urlPhoto || `${emp.id}_biometry.jpg`, { type: 'image/jpeg' });
 
     this.employeeService.sendEmployeePayload(emp, file).subscribe({
       next: () => {
