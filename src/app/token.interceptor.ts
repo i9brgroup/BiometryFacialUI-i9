@@ -24,13 +24,13 @@ export class TokenInterceptor implements HttpInterceptor {
     let reqToSend = req;
     if (shouldAttach) {
       const headers: Record<string, string> = { Accept: 'application/json' };
-      
+
       // Do NOT attach the expired token to the refresh request
       if (token && !isRefreshRequest) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      
-      reqToSend = req.clone({ 
+
+      reqToSend = req.clone({
         setHeaders: headers,
         withCredentials: true // Required for HTTPOnly cookies (refreshToken)
       });
@@ -64,14 +64,14 @@ export class TokenInterceptor implements HttpInterceptor {
             if (!isLoginRequest) {
               const displayMsg = `Sessão expirada ou sem permissão (${status})`;
               this.auth.apiError.set(displayMsg);
-              
+
               // If it was a refresh request that failed with 401, logout
               if (isRefreshRequest) {
                 this.logoutAndRedirect();
               }
             }
           } else if (status !== 0 && !isLoginRequest) {
-            const displayMsg = `Erro ${status}: ${message}`;
+            const displayMsg = `Erro: ${message}`;
             this.auth.apiError.set(displayMsg);
           }
         }
