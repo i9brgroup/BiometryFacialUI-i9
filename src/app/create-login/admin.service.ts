@@ -8,6 +8,6 @@ export class AdminService {
   private readonly http = inject(HttpClient);
 
   createLogin(payload: CreateLoginPayload): Observable<any> {
-    return this.http.post('/api/v1/user-login/create', payload);
+    return this.http.post('/api/v1/users/create', payload);
   }
 }
