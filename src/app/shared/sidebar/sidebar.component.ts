@@ -31,6 +31,36 @@ import { AuthService } from '../../auth.service';
         <span>Gestão Biométrica</span>
       </button>
 
+      <!-- Funcionários Dropdown (all authenticated users) -->
+      <div class="sidebar-dropdown">
+        <button
+          class="sidebar-nav-item"
+          [class.active]="isEmployeeRoute()"
+          (click)="toggleEmployeeDropdown()"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="sidebar-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          <span>Funcionários</span>
+          <svg class="dropdown-chevron" [class.dropdown-open]="employeeDropdownOpen()" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <div *ngIf="employeeDropdownOpen()" class="dropdown-items">
+          <button
+            class="dropdown-item"
+            [class.active]="router.url === '/gerenciar-funcionarios'"
+            (click)="navTo('/gerenciar-funcionarios')"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            Gerenciar Funcionários
+          </button>
+        </div>
+      </div>
+
       <!-- Admin Dropdown (SUPER_ADMIN only) -->
       <div *ngIf="role === 'SUPER_ADMIN'" class="sidebar-dropdown">
         <button
@@ -172,14 +202,23 @@ export class SidebarComponent {
   public readonly auth = inject(AuthService);
   modalOpen = signal(false);
   dropdownOpen = signal(false);
+  employeeDropdownOpen = signal(false);
   role = this.auth.getRoleByToken();
 
   isAdminRoute(): boolean {
     return this.router.url === '/cadastro' || this.router.url === '/gerenciar-usuarios';
   }
 
+  isEmployeeRoute(): boolean {
+    return this.router.url === '/gerenciar-funcionarios';
+  }
+
   toggleDropdown(): void {
     this.dropdownOpen.update(v => !v);
+  }
+
+  toggleEmployeeDropdown(): void {
+    this.employeeDropdownOpen.update(v => !v);
   }
 
   navTo(path: string) {
