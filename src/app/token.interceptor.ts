@@ -88,9 +88,17 @@ export class TokenInterceptor implements HttpInterceptor {
             if (!isLoginRequest) {
               const displayMsg = `Sessão expirada ou sem permissão (${status})`;
               this.auth.apiError.set(displayMsg);
+<<<<<<< HEAD
+=======
+
+              // If it was a refresh request that failed with 401, logout
+              if (isRefreshRequest) {
+                this.logoutAndRedirect();
+              }
+>>>>>>> 16f4f62a00702082a0e80768c73f684ce2569121
             }
           } else if (status !== 0 && !isLoginRequest) {
-            const displayMsg = `Erro ${status}: ${message}`;
+            const displayMsg = `Erro: ${message}`;
             this.auth.apiError.set(displayMsg);
           }
         }
