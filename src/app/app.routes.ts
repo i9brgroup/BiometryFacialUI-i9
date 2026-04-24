@@ -7,5 +7,6 @@ export const routes: Routes = [
   { path: 'employee', loadComponent: () => import('./employee/employee-manager.component').then(m => m.EmployeeManagerComponent), canActivate: [authGuard] },
   { path: 'cadastro', loadComponent: () => import('./create-login/create-login').then(m => m.default), canActivate: [authGuard], data: { expectedRole: 'SUPER_ADMIN' } },
   { path: 'gerenciar-usuarios', loadComponent: () => import('./admin/manage-users.component').then(m => m.default), canActivate: [authGuard], data: { expectedRole: 'SUPER_ADMIN' } },
+  { path: 'gerenciar-funcionarios', loadComponent: () => import('./employee-list/employee-list.component').then(m => m.default), canActivate: [authGuard] },
   { path: '**', redirectTo: '/login' }
 ];

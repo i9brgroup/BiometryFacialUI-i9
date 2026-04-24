@@ -1,0 +1,134 @@
+<div class="page-layout">
+  <app-sidebar></app-sidebar>
+
+  <main class="main-content custom-scrollbar">
+    <!-- Global API Error Alert -->
+    <div *ngIf="auth.apiError()" class="alert-banner animate-fade-in">
+      <div class="alert-content">
+        <svg xmlns="http://www.w3.org/2000/svg" class="alert-icon" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+          <span class="alert-label">Alerta de Sistema</span>
+          <span class="alert-message">{{ auth.apiError() }}</span>
+        </div>
+      </div>
+      <button (click)="auth.apiError.set(null)" class="alert-dismiss">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Page Header -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Gerenciar Funcionários</h1>
+        <p class="page-subtitle">Listagem completa de funcionários do sistema</p>
+      </div>
+      <div class="page-header-meta">
+        <span class="total-badge">{{ totalElements() }} funcionários</span>
+      </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+      <div class="filter-group">
+        <label class="filter-label" for="orderBy">Ordenar por</label>
+        <select id="orderBy" class="filter-select" [ngModel]="orderBy()"
+          (ngModelChange)="onOrderByChange($event)">
+          <option *ngFor="let opt of orderByOptions" [value]="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="direction">Direção</label>
+        <select id="direction" class="filter-select" [ngModel]="direction()"
+          (ngModelChange)="onDirectionChange($event)">
+          <option *ngFor="let opt of directionOptions" [value]="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-state animate-fade-in">
+      <div class="loading-spinner"></div>
+      <span class="loading-text">Carregando funcionários...</span>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error() && !loading()" class="error-state animate-fade-in">
+      <p class="error-message">{{ error() }}</p>
+      <button class="btn-primary btn-active-scale" (click)="loadEmployees()">Tentar novamente</button>
+    </div>
+
+    <!-- Table Card -->
+    <div *ngIf="!loading() && !error()" class="table-card animate-fade-in">
+      <!-- Empty State -->
+      <div *ngIf="employees().length === 0" class="empty-state">
+        <p class="empty-title">Nenhum funcionário encontrado</p>
+        <p class="empty-desc">A lista de funcionários está vazia.</p>
+      </div>
+
+      <!-- Employees Table -->
+      <table *ngIf="employees().length > 0" class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome Completo</th>
+            <th>Site ID</th>
+            <th>Badge</th>
+            <th>Biometria</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let emp of employees()" [class.row-inactive]="!emp.active">
+            <td class="cell-id">{{ emp.id }}</td>
+            <td class="cell-name">{{ emp.completeName }}</td>
+            <td class="cell-site">{{ emp.siteId }}</td>
+            <td class="cell-badge">{{ emp.badgeNumber || '—' }}</td>
+            <td>
+              <span *ngIf="hasBiometric(emp.biometricHash)" class="bio-check" title="Biometria registrada">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </span>
+              <span *ngIf="!hasBiometric(emp.biometricHash)" class="bio-none" title="Sem biometria">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </span>
+            </td>
+            <td>
+              <span class="status-pill" [class.status-active]="emp.active"
+                [class.status-inactive]="!emp.active">
+                {{ emp.active ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages() > 1" class="pagination">
+        <button class="pagination-btn" [disabled]="currentPage() === 0" (click)="goToPage(currentPage() - 1)">
+          ‹ Anterior
+        </button>
+        <span class="pagination-info">
+          Página {{ currentPage() + 1 }} de {{ totalPages() }}
+        </span>
+        <button class="pagination-btn" [disabled]="currentPage() >= totalPages() - 1"
+          (click)="goToPage(currentPage() + 1)">
+          Próxima ›
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
