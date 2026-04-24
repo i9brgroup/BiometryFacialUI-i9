@@ -1,0 +1,175 @@
+<div class="page-layout">
+  <app-sidebar></app-sidebar>
+
+  <main class="main-content custom-scrollbar">
+    <!-- Global API Error Alert -->
+    <div *ngIf="auth.apiError()" class="alert-banner animate-fade-in">
+      <div class="alert-content">
+        <svg xmlns="http://www.w3.org/2000/svg" class="alert-icon" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+          <span class="alert-label">Alerta de Sistema</span>
+          <span class="alert-message">{{ auth.apiError() }}</span>
+        </div>
+      </div>
+      <button (click)="auth.apiError.set(null)" class="alert-dismiss">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Page Header -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Gerenciar Usuários</h1>
+        <p class="page-subtitle">Ativação e desativação de acessos ao sistema</p>
+      </div>
+      <div class="page-header-meta">
+        <span class="total-badge">{{ totalElements() }} usuários</span>
+      </div>
+    </header>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-state animate-fade-in">
+      <div class="loading-spinner"></div>
+      <span class="loading-text">Carregando usuários...</span>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error() && !loading()" class="error-state animate-fade-in">
+      <p class="error-message">{{ error() }}</p>
+      <button class="btn-primary btn-active-scale" (click)="loadUsers()">Tentar novamente</button>
+    </div>
+
+    <!-- Table Card -->
+    <div *ngIf="!loading() && !error()" class="table-card animate-fade-in">
+      <!-- Empty State -->
+      <div *ngIf="users().length === 0" class="empty-state">
+        <p class="empty-title">Nenhum usuário encontrado</p>
+        <p class="empty-desc">A lista de usuários está vazia.</p>
+      </div>
+
+      <!-- Users Table -->
+      <table *ngIf="users().length > 0" class="users-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Site ID</th>
+            <th>Papel</th>
+            <th>Criado em</th>
+            <th>Status</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users()" [class.row-inactive]="!user.ativo">
+            <td class="cell-id">{{ user.id }}</td>
+            <td class="cell-name">{{ user.username }}</td>
+            <td class="cell-email">{{ user.email }}</td>
+            <td class="cell-site">{{ user.siteId }}</td>
+            <td>
+              <span class="role-badge">{{ user.role }}</span>
+            </td>
+            <td class="cell-date">{{ formatDate(user.createdAt) }}</td>
+            <td>
+              <span class="status-pill" [class.status-active]="user.ativo" [class.status-inactive]="!user.ativo">
+                {{ user.ativo ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-toggle btn-active-scale" [class.btn-toggle-deactivate]="user.ativo"
+                [class.btn-toggle-activate]="!user.ativo" (click)="openToggleModal(user)">
+                {{ user.ativo ? 'Desativar' : 'Ativar' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages() > 1" class="pagination">
+        <button class="pagination-btn" [disabled]="currentPage() === 0" (click)="goToPage(currentPage() - 1)">
+          ‹ Anterior
+        </button>
+        <span class="pagination-info">
+          Página {{ currentPage() + 1 }} de {{ totalPages() }}
+        </span>
+        <button class="pagination-btn" [disabled]="currentPage() >= totalPages() - 1"
+          (click)="goToPage(currentPage() + 1)">
+          Próxima ›
+        </button>
+      </div>
+    </div>
+
+    <!-- Toggle Status Modal -->
+    <div *ngIf="modalOpen()" class="modal-overlay animate-fade-in" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <div class="modal-icon-wrap" [class.modal-icon-danger]="modalUser()?.ativo"
+          [class.modal-icon-success]="!modalUser()?.ativo">
+          <svg *ngIf="modalUser()?.ativo" xmlns="http://www.w3.org/2000/svg" class="modal-icon" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+          </svg>
+          <svg *ngIf="!modalUser()?.ativo" xmlns="http://www.w3.org/2000/svg" class="modal-icon" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+
+        <h3 class="modal-title">
+          {{ modalUser()?.ativo ? 'Desativar Usuário?' : 'Ativar Usuário?' }}
+        </h3>
+
+        <div class="modal-user-info">
+          <div class="modal-info-row">
+            <span class="modal-info-label">Nome</span>
+            <span class="modal-info-value">{{ modalUser()?.username }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">Email</span>
+            <span class="modal-info-value">{{ modalUser()?.email }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">Site ID</span>
+            <span class="modal-info-value">{{ modalUser()?.siteId }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">Status Atual</span>
+            <span class="modal-info-value">
+              <span class="status-pill" [class.status-active]="modalUser()?.ativo"
+                [class.status-inactive]="!modalUser()?.ativo">
+                {{ modalUser()?.ativo ? 'Ativo' : 'Inativo' }}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <p class="modal-desc">
+          {{ modalUser()?.ativo
+          ? 'O usuário perderá acesso ao sistema imediatamente.'
+          : 'O usuário terá acesso ao sistema restaurado.'
+          }}
+        </p>
+
+        <div class="modal-actions">
+          <button class="modal-btn-secondary" (click)="closeToggleModal()" [disabled]="toggling()">Cancelar</button>
+          <button class="modal-btn-confirm btn-active-scale" [class.modal-btn-danger]="modalUser()?.ativo"
+            [class.modal-btn-success]="!modalUser()?.ativo" (click)="confirmToggle()" [disabled]="toggling()">
+            <span *ngIf="toggling()" class="inline-spinner"></span>
+            {{ modalUser()?.ativo ? 'Confirmar Desativação' : 'Confirmar Ativação' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

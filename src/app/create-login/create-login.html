@@ -107,10 +107,11 @@
           </mat-form-field>
 
           <div class="md:col-span-2 flex gap-4 pt-6">
-            <button mat-flat-button class="flex-1 py-7 rounded font-bold text-xs uppercase tracking-widest btn-active-scale shadow-sm" style="background-color: #0b3b66; color: white;">
-              Finalizar Cadastro de Operador
+            <button mat-flat-button type="submit" class="flex-1 py-7 rounded font-bold text-xs uppercase tracking-widest btn-active-scale shadow-sm relative" style="background-color: #0b3b66; color: white;" [disabled]="loading()">
+              <span *ngIf="loading()" class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2 align-middle" aria-hidden="true"></span>
+              {{ loading() ? 'Registrando...' : 'Finalizar Cadastro de Operador' }}
             </button>
-            <button mat-stroked-button type="button" class="px-10 py-7 rounded font-bold text-xs uppercase tracking-widest text-slate-500 border-slate-200 hover:bg-slate-50 btn-active-scale" (click)="formDirective.resetForm()">
+            <button mat-stroked-button type="button" class="px-10 py-7 rounded font-bold text-xs uppercase tracking-widest text-slate-500 border-slate-200 hover:bg-slate-50 btn-active-scale" (click)="formDirective.resetForm()" [disabled]="loading()">
               Limpar
             </button>
           </div>
