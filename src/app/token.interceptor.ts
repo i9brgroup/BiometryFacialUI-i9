@@ -13,10 +13,19 @@ export class TokenInterceptor implements HttpInterceptor {
   private isRefreshing = false;
   private refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
+  /** Track consecutive refresh failures. Max 3 attempts before giving up. */
+  private refreshAttempts = 0;
+  private readonly MAX_REFRESH_ATTEMPTS = 3;
+
   // Only attach token to requests to these hosts/prefixes (API-specific)
   private allowedPrefixes = ['/api'];
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+    // If session is already expired, block all API requests
+    if (this.auth.sessionExpired()) {
+      return throwError(() => new Error('Session expired. Please re-login.'));
+    }
+
     const token = this.auth.getToken();
     const isRefreshRequest = req.url.includes('/auth/refresh');
     const shouldAttach = this.allowedPrefixes.some((p) => req.url.startsWith(p));
@@ -43,13 +52,28 @@ export class TokenInterceptor implements HttpInterceptor {
           const isLoginRequest = req.url.includes('/auth/login');
           const isRefreshRequest = req.url.includes('/auth/refresh');
 
-          // If 401/403 and not a login/refresh request, try to refresh
+          // If 401/403 and not a login/refresh request, try to refresh (with retry limit)
           if ((status === 401 || status === 403) && !isLoginRequest && !isRefreshRequest) {
-            console.log(`[TokenInterceptor] Interceptado erro ${status}. Iniciando rotação de token para: ${req.url}`);
+            if (this.refreshAttempts >= this.MAX_REFRESH_ATTEMPTS) {
+              console.error(`[TokenInterceptor] Limite de ${this.MAX_REFRESH_ATTEMPTS} tentativas de refresh atingido. Encerrando sessão.`);
+              this.forceSessionExpired();
+              return throwError(() => err);
+            }
+            console.log(`[TokenInterceptor] Interceptado erro ${status}. Tentativa de refresh ${this.refreshAttempts + 1}/${this.MAX_REFRESH_ATTEMPTS} para: ${req.url}`);
             return this.handle401Error(reqToSend, next);
           }
 
-          // Handle other errors or errors that couldn't be refreshed
+          // Handle refresh request failure
+          if ((status === 401 || status === 403) && isRefreshRequest) {
+            console.error('[TokenInterceptor] Refresh request falhou com', status);
+            this.refreshAttempts++;
+            if (this.refreshAttempts >= this.MAX_REFRESH_ATTEMPTS) {
+              this.forceSessionExpired();
+            }
+            return throwError(() => err);
+          }
+
+          // Handle other errors
           let message = 'Erro na requisição';
           const body = err.error;
           const isHtmlResponse = typeof body === 'string' && (body.trim().startsWith('<!doctype') || body.trim().startsWith('<html'));
@@ -64,11 +88,6 @@ export class TokenInterceptor implements HttpInterceptor {
             if (!isLoginRequest) {
               const displayMsg = `Sessão expirada ou sem permissão (${status})`;
               this.auth.apiError.set(displayMsg);
-
-              // If it was a refresh request that failed with 401, logout
-              if (isRefreshRequest) {
-                this.logoutAndRedirect();
-              }
             }
           } else if (status !== 0 && !isLoginRequest) {
             const displayMsg = `Erro: ${message}`;
@@ -90,13 +109,20 @@ export class TokenInterceptor implements HttpInterceptor {
         switchMap((newToken: string) => {
           console.log('[TokenInterceptor] Token rotacionado com sucesso. Repetindo requisição original.');
           this.isRefreshing = false;
+          this.refreshAttempts = 0; // Reset counter on success
           this.refreshTokenSubject.next(newToken);
           return next.handle(this.addToken(request, newToken));
         }),
         catchError((err) => {
-          console.error('[TokenInterceptor] Falha ao rotacionar token. Deslogando usuário.', err);
+          console.error('[TokenInterceptor] Falha ao rotacionar token.', err);
           this.isRefreshing = false;
-          this.logoutAndRedirect();
+          this.refreshAttempts++;
+
+          if (this.refreshAttempts >= this.MAX_REFRESH_ATTEMPTS) {
+            console.error(`[TokenInterceptor] ${this.MAX_REFRESH_ATTEMPTS} tentativas falharam. Forçando expiração da sessão.`);
+            this.forceSessionExpired();
+          }
+
           return throwError(() => err);
         })
       );
@@ -119,9 +145,14 @@ export class TokenInterceptor implements HttpInterceptor {
     });
   }
 
-  private logoutAndRedirect() {
-    this.auth.logout().subscribe({
-      complete: () => this.router.navigateByUrl('/login')
-    });
+  /**
+   * Force session expiration: clear token from storage immediately,
+   * set the sessionExpired signal, and stop all further requests.
+   */
+  private forceSessionExpired(): void {
+    this.auth.forceLogout();
+    this.refreshAttempts = 0;
+    this.isRefreshing = false;
+    this.refreshTokenSubject.next(null);
   }
 }

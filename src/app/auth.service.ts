@@ -11,6 +11,7 @@ export class AuthService {
   private readonly ACCESS_TOKEN_KEY = 'app_access_token';
   isAuthenticated = signal<boolean>(!!this.getToken());
   apiError = signal<string | null>(null);
+  sessionExpired = signal(false);
 
   constructor() {
     // Este efeito roda sempre que o valor de apiError muda
@@ -59,6 +60,17 @@ export class AuthService {
   private clearStorage() {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     this.isAuthenticated.set(false);
+  }
+
+  /**
+   * Force logout without calling the API.
+   * Clears the accessToken immediately and sets sessionExpired
+   * so the app shows a re-login alert.
+   */
+  forceLogout(): void {
+    localStorage.removeItem(this.ACCESS_TOKEN_KEY);
+    this.isAuthenticated.set(false);
+    this.sessionExpired.set(true);
   }
 
   getRoleByToken(): string | null {

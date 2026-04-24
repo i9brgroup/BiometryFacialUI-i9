@@ -1,11 +1,13 @@
 <div class="min-h-screen flex items-center justify-center p-4 bg-[#0b3b66]">
   <!-- Background subtle pattern/gradient -->
-  <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 40px 40px;"></div>
+  <div class="absolute inset-0 opacity-10 pointer-events-none"
+    style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 40px 40px;">
+  </div>
 
   <!-- Login Card (Enterprise Pro) -->
   <main class="w-full max-w-md pro-card border-none shadow-2xl p-10 relative z-10 animate-fade-in">
     <header class="flex flex-col items-center mb-10">
-      <img src="/Biometria.ico" alt="Biometria i9" class="w-20 h-20 mb-4"/>
+      <img src="/Biometria.ico" alt="Biometria i9" class="w-20 h-20 mb-4" />
       <h1 class="text-2xl font-black text-[#0b3b66] tracking-tight uppercase">i9 Biometria</h1>
       <div class="h-1 w-12 bg-blue-600 mt-2 rounded-full"></div>
       <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-4">Terminal de Identificação</p>
@@ -14,30 +16,41 @@
     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6" aria-label="Formulário de login">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Email Corporativo</mat-label>
-        <input type="email" matInput [formControl]="emailFormControl" [errorStateMatcher]="matcher" placeholder="usuario@i9.com.br" aria-required="true" autocomplete="username">
-        <mat-error *ngIf="emailFormControl.hasError('email') && !emailFormControl.hasError('required')">Digite um email válido</mat-error>
+        <input type="email" matInput [formControl]="emailFormControl" [errorStateMatcher]="matcher"
+          placeholder="usuario@i9.com.br" aria-required="true" autocomplete="username">
+        <mat-error *ngIf="emailFormControl.hasError('email') && !emailFormControl.hasError('required')">Digite um email
+          válido</mat-error>
         <mat-error *ngIf="emailFormControl.hasError('required')">O email é obrigatório</mat-error>
       </mat-form-field>
 
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Senha de Acesso</mat-label>
-        <input matInput type="password" formControlName="password" aria-required="true" autocomplete="current-password" />
-        <mat-error *ngIf="form.get('password')?.hasError('required') && form.get('password')?.touched">A senha é obrigatória</mat-error>
+        <input matInput type="password" formControlName="password" aria-required="true"
+          autocomplete="current-password" />
+        <mat-error *ngIf="form.get('password')?.hasError('required') && form.get('password')?.touched">A senha é
+          obrigatória</mat-error>
       </mat-form-field>
 
-      <div *ngIf="error()" class="text-xs font-bold text-red-600 bg-red-50 p-4 rounded border border-red-100 uppercase tracking-wide" role="alert">
+      <div *ngIf="error()"
+        class="text-xs font-bold text-red-600 bg-red-50 p-4 rounded border border-red-100 uppercase tracking-wide"
+        role="alert">
         {{ error() }}
       </div>
 
       <div class="pt-2">
-        <button mat-flat-button color="primary" class="w-full py-7 rounded font-bold text-sm tracking-widest btn-active-scale transition-all uppercase" type="submit" [disabled]="loading()" style="background-color: #0b3b66;">
-          <span *ngIf="loading()" class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" aria-hidden="true"></span>
+        <button mat-flat-button color="primary"
+          class="w-full py-7 rounded font-bold text-sm tracking-widest btn-active-scale transition-all uppercase"
+          type="submit" [disabled]="loading()" style="background-color: #0b3b66;">
+          <span *ngIf="loading()"
+            class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"
+            aria-hidden="true"></span>
           Autenticar no Sistema
         </button>
       </div>
 
       <div class="text-center pt-4">
-        <a class="text-xs font-bold text-slate-400 hover:text-[#0b3b66] transition-colors uppercase tracking-widest" href="#">Recuperar Acesso</a>
+        <a class="text-xs font-bold text-slate-400 hover:text-[#0b3b66] transition-colors uppercase tracking-widest"
+          href="#">Recuperar Acesso</a>
       </div>
     </form>
   </main>

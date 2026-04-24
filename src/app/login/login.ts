@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, NgModule, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,7 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { FormControl, FormGroupDirective, NgForm } from '@angular/forms';
-import { ErrorStateMatcher, ShowOnDirtyErrorStateMatcher } from '@angular/material/core';
+import { ErrorStateMatcher } from '@angular/material/core';
 
 @Component({
   selector: 'app-login',
@@ -55,7 +55,8 @@ export class Login {
       await firstValueFrom(this.auth.login({ email, password }));
       await this.router.navigate(['/employee']);
     } catch (err: any) {
-      const msg = err?.error?.detail || err?.message || 'Erro ao autenticar';
+      const msg = err.error?.message || 'Erro ao autenticar';
+      console.log('erro', msg);
       this.error.set(String(msg));
     } finally {
       this.loading.set(false);
